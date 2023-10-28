@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000"
+    android:orientation="vertical"
+    tools:context=".MainActivity"
+    >
+
+    <TextView
+        android:layout_width="91dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:fontFamily="@font/npsfont_bold"
+        android:text="  전광판"
+        android:textColor="#FFFFFF"
+        android:textSize="20sp" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <TextView
+            android:id="@+id/displayText"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:textColor="#FFFFFF"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:gravity="center"
+            android:singleLine="true"
+            android:ellipsize="none"
+            android:rotation="90"
+            android:text=""
+            android:includeFontPadding="false"
+            android:textSize="120sp"
+            android:maxHeight="100dp"
+            android:layout_centerInParent="true"/>
+
+    </ScrollView>
+
+</LinearLayout>

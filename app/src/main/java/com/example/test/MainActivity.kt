@@ -21,6 +21,20 @@ class MainActivity : ComponentActivity() {
             val intent = Intent(this, SubActivity::class.java)
             startActivity(intent)
         }
+
+        val button2 = findViewById<Button>(R.id.button2)
+
+        button2.setOnClickListener {
+            val intent = Intent(this, Hacha::class.java)
+            startActivity(intent)
+        }
+
+        val button3 = findViewById<Button>(R.id.button3)
+
+        button3.setOnClickListener {
+            val intent = Intent(this, LED::class.java)
+            startActivity(intent)
+        }
     }
 }
 

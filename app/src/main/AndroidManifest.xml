@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -12,17 +14,59 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Test"
         tools:targetApi="31">
+
+        <activity
+            android:name=".Bus_station"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Test"/>
+
+        <activity
+            android:name=".LED_Result"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Test"/>
+
+        <activity
+            android:name=".SubActivity2"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Test"/>
+
+        <activity
+            android:name=".LED"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Test"/>
+
+        <activity
+            android:name=".Hacha"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Test"/>
+
+        <activity
+            android:name=".SubActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Test"/>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.Test">
+
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
+                <action android:name="android.speech.RecognitionService" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
     </application>
+
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 
 </manifest>

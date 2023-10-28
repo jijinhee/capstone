@@ -14,7 +14,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:fontFamily="@font/npsfont_bold"
-        android:text="버스 검색"
+        android:text="  전광판"
         android:textColor="#FFFFFF"
         android:textSize="20sp" />
 
@@ -27,24 +27,26 @@
         android:src="@drawable/bus" />
 
     <EditText
-        android:id="@+id/locationTextView"
-        android:layout_width="350dp"
+        android:id="@+id/editText"
+        android:layout_width="370dp"
         android:layout_height="50dp"
+        android:inputType="text"
         android:layout_gravity="center"
-        android:hint=" 탑승할 버스를 입력하세요."
+        android:hint="  표시될 내용을 입력해주세요."
         android:fontFamily="@font/npsfont_bold"
         android:background="#FFFFFF"
         android:textColor="#000000"
         android:textSize="26dp" />
 
     <Button
-        android:id="@+id/sub_1"
+        android:id="@+id/sub_2"
         android:layout_width="200dp"
         android:layout_height="60dp"
-        android:layout_margin="20dp"
+        android:layout_margin="30dp"
         android:layout_gravity="center"
         android:background="@drawable/color_change"
         android:fontFamily="@font/npsfont_bold"
+        android:layout_below="@id/editText"
         android:textSize="26dp"
         android:text="확   인" />
 

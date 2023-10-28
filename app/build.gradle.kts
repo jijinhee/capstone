@@ -50,7 +50,10 @@ android {
 }
 
 dependencies {
-
+    implementation ("com.squareup.okhttp3:okhttp:4.9.1")
+    implementation ("com.google.android.gms:play-services-maps:18.0.0")
+    implementation("com.opencsv:opencsv:5.6")
+    implementation ("com.google.android.gms:play-services-location:19.0.0")
     implementation("androidx.core:core-ktx:1.9.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")
     implementation("androidx.activity:activity-compose:1.7.2")
