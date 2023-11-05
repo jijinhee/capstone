@@ -24,7 +24,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:fontFamily="@font/npsfont_bold"
-        android:text=""
+        android:text="ㅇㅇ"
         android:textColor="#FFFFFF"
         android:textSize="20sp" />
 

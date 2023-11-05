@@ -30,7 +30,7 @@
         android:id="@+id/button"
         android:layout_width="301dp"
         android:fontFamily="@font/npsfont_bold"
-        android:layout_height="107dp"
+        android:layout_height="130dp"
         android:layout_gravity="center"
         android:layout_marginTop="30dp"
         android:background="@drawable/color_change"
@@ -46,7 +46,7 @@
     <Button
         android:id="@+id/button2"
         android:layout_width="301dp"
-        android:layout_height="107dp"
+        android:layout_height="130dp"
         android:fontFamily="@font/npsfont_bold"
         android:layout_gravity="center"
         android:layout_marginTop="20dp"
@@ -61,23 +61,23 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button2" />
 
-    <Button
-        android:id="@+id/button3"
-        android:layout_width="301dp"
-        android:layout_height="107dp"
-        android:fontFamily="@font/npsfont_bold"
-        android:layout_gravity="center"
-        android:layout_marginTop="20dp"
-        android:background="@drawable/color_change"
-        android:text="전광판"
-        android:textSize="45sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/button3"
-        app:layout_constraintTop_toBottomOf="@+id/button3"
-        />
+<!--    <Button-->
+<!--        android:id="@+id/button3"-->
+<!--        android:layout_width="301dp"-->
+<!--        android:layout_height="107dp"-->
+<!--        android:fontFamily="@font/npsfont_bold"-->
+<!--        android:layout_gravity="center"-->
+<!--        android:layout_marginTop="20dp"-->
+<!--        android:background="@drawable/color_change"-->
+<!--        android:text="전광판"-->
+<!--        android:textSize="45sp"-->
+<!--        android:textStyle="bold"-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintHorizontal_bias="0.5"-->
+<!--        app:layout_constraintStart_toEndOf="@+id/button3"-->
+<!--        app:layout_constraintTop_toBottomOf="@+id/button3"-->
+<!--        />-->
 
 
 </LinearLayout>
