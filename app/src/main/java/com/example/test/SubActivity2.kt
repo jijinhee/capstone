@@ -19,10 +19,13 @@ class SubActivity2:  ComponentActivity() {
         // 입력값 가져오기
         val responseData = intent.getStringExtra("responseData")
         val busNumber = intent.getStringExtra("busNumber")
-        val currentLocation = intent.getStringExtra("currentLocation")
         val stationList = parseJsonResponse(responseData)
 
-        Log.e("확인용", currentLocation.toString())
+        // 위도와 경도를 받아온 후, Double로 변환
+        val latitude = intent.getStringExtra("latitude")?.toDoubleOrNull()
+        val longitude = intent.getStringExtra("longitude")?.toDoubleOrNull()
+
+        Log.e("확인용", "Latitude: $latitude, Longitude: $longitude")
         val listView = findViewById<ListView>(R.id.listView)
         val adapter = ListAdapter(this, stationList)
         listView.adapter = adapter
@@ -41,7 +44,13 @@ class SubActivity2:  ComponentActivity() {
             intent.putExtra("xCoordinate", xCoordinate)
             intent.putExtra("yCoordinate", yCoordinate)
             intent.putExtra("stationName", stationName)
-            intent.putExtra("currentLocation", currentLocation)
+            // latitude와 longitude 값을 함께 넘겨줍니다.
+            latitude?.let { intent.putExtra("latitude", it.toString()) }
+            longitude?.let { intent.putExtra("longitude", it.toString()) }
+
+            Log.e("확인용", latitude.toString())
+            Log.e("확인용", longitude.toString())
+
             startActivity(intent)
         }
     }
@@ -55,10 +64,12 @@ class SubActivity2:  ComponentActivity() {
                 val distance = station.getString("distance")
                 val x = station.getString("x")
                 val y = station.getString("y")
+                val direction = station.getString("direction")
 
                 val stationObject = JSONObject()
                 stationObject.put("stationName", stationName)
                 stationObject.put("distance", distance)
+                stationObject.put("direction", direction)
                 stationObject.put("x", x)
                 stationObject.put("y", y)
 

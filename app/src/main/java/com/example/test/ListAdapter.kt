@@ -37,14 +37,18 @@ class ListAdapter(private val context: Context, private val stationList: List<JS
         val station = stationList[position]
         val stationName = station.getString("stationName")
         val distance = station.getString("distance")
+        val direction = station.getString("direction")
 
         holder.stationNameTextView.text = "정류소명: $stationName"
         holder.distanceTextView.text = "거리: $distance"
+        holder.directionTextView.text = "방면: $direction"
+
 
         return view!!
     }
 
     private class ViewHolder(view: View) {
+        val directionTextView: TextView = view.findViewById(R.id.directionTextView)
         val stationNameTextView: TextView = view.findViewById(R.id.stationNameTextView)
         val distanceTextView: TextView = view.findViewById(R.id.distanceTextView)
     }

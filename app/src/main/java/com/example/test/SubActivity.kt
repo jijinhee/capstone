@@ -241,7 +241,11 @@ class SubActivity : ComponentActivity() {
                     val intent = Intent(this@SubActivity, SubActivity2::class.java)
                     intent.putExtra("responseData", responseData)
                     intent.putExtra("busNumber", selectedBusNumber)
-                    intent.putExtra("currentLocation", currentLocation)
+                    // currentLocation의 위도와 경도를 String으로 변환하여 intent에 추가
+                    currentLocation?.let {
+                        intent.putExtra("latitude", it.latitude.toString())
+                        intent.putExtra("longitude", it.longitude.toString())
+                    }
                     startActivity(intent)
                 } else {
                     // 서버 응답이 실패인 경우

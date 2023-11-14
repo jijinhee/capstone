@@ -22,4 +22,13 @@
         android:textColor="#ffffff"
         android:padding="8dp" />
 
+    <TextView
+        android:id="@+id/directionTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/npsfont_bold"
+        android:textSize="30sp"
+        android:textColor="#ffffff"
+        android:padding="8dp" />
+
 </LinearLayout>

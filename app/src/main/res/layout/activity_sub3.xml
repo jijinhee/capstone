@@ -19,9 +19,19 @@
         android:textSize="20sp" />
 
     <TextView
-        android:id="@+id/currentLocation_view"
+        android:id="@+id/current_latitude_view"
         android:layout_width="wrap_content"
-        android:layout_height="150dp"
+        android:layout_height="30dp"
+        android:layout_gravity="center"
+        android:text=""
+        android:textColor="#FFFFFF"
+        android:textSize="20sp"
+        android:fontFamily="@font/npsfont_bold"/>
+
+    <TextView
+        android:id="@+id/current_longitude_view"
+        android:layout_width="wrap_content"
+        android:layout_height="30dp"
         android:layout_gravity="center"
         android:text=""
         android:textColor="#FFFFFF"
@@ -31,7 +41,7 @@
     <TextView
         android:id="@+id/stationName_view"
         android:layout_width="wrap_content"
-        android:layout_height="150dp"
+        android:layout_height="30dp"
         android:layout_gravity="center"
         android:text=""
         android:textColor="#FFFFFF"
@@ -41,7 +51,7 @@
     <TextView
         android:id="@+id/xCoordinate_view"
         android:layout_width="wrap_content"
-        android:layout_height="150dp"
+        android:layout_height="30dp"
         android:layout_gravity="center"
         android:text=""
         android:textColor="#FFFFFF"
@@ -51,7 +61,7 @@
     <TextView
         android:id="@+id/yCoordinate_view"
         android:layout_width="wrap_content"
-        android:layout_height="150dp"
+        android:layout_height="30dp"
         android:layout_gravity="center"
         android:text=""
         android:textColor="#FFFFFF"
