@@ -1,215 +1,309 @@
 package com.example.test
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.drawable.BitmapDrawable
+import android.location.Location
+import android.location.LocationListener
+import android.location.LocationManager
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.speech.RecognizerIntent
+import android.speech.tts.TextToSpeech
 import android.util.Log
 import android.widget.Button
-import android.widget.LinearLayout
+import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
-import com.google.gson.Gson
-import com.skt.Tmap.TMapMarkerItem
-import com.skt.Tmap.TMapPoint
-import com.skt.Tmap.TMapPolyLine
-import com.skt.Tmap.TMapView
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody
-import org.json.JSONObject
-import java.net.URLEncoder
-import kotlinx.coroutines.*
+import okhttp3.*
+import org.json.JSONArray
+import org.json.JSONException
+import java.io.IOException
+import java.util.ArrayList
+import java.util.Locale
 
 class SubActivity : ComponentActivity() {
-    // 위치 권한 요청 코드
+
     private val LOCATION_PERMISSION_REQUEST = 1
-    private val client = OkHttpClient()
-    private lateinit var fusedLocationClient: FusedLocationProviderClient // 안드로이드서 제공하는 위치 정보 서비스 api (ㄱㅈㅅ)
-    private lateinit var tMapView: TMapView
+    private val RECORD_AUDIO_PERMISSION_REQUEST = 1
+    private lateinit var locationManager: LocationManager
+    private lateinit var resultText: TextView
+    private lateinit var textToSpeech: TextToSpeech
+    private var selectedBusNumber: String = ""
+    private var currentLocation: Location? = null
+    private var isFirstRun = true
+
+    // 위치 정보를 업데이트할 때 사용되는 리스너
+    private val locationListener: LocationListener = object : LocationListener {
+        override fun onLocationChanged(location: Location) {
+            Log.i("Location", "Latitude: ${location.latitude}, Longitude: ${location.longitude}")
+            currentLocation = location
+        }
+
+        override fun onStatusChanged(provider: String, status: Int, extras: Bundle) {}
+
+        override fun onProviderEnabled(provider: String) {}
+
+        override fun onProviderDisabled(provider: String) {}
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_sub) // activity_sub.xml에 정의된 레이아웃을 설정
+        setContentView(R.layout.activity_sub)
 
-        // 목적지 좌표 가져오는 코드 필요
+        val editText = findViewById<EditText>(R.id.sub_2)
+        val button = findViewById<Button>(R.id.sub_1)
+        val speakImage = findViewById<ImageButton>(R.id.speak_image)
+        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
 
-        // TMap 뷰 설정
-        tMapView = TMapView(this)
-        tMapView.setSKTMapApiKey("UR12n8NxMX11hi3IhN9gR9vC4paPTvsn1NvuHL6M")
+        resultText = findViewById<EditText>(R.id.sub_2)
+        textToSpeech = TextToSpeech(this) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                val locale = Locale.getDefault()
+                textToSpeech.language = locale
+            } else {
+                // TTS 초기화 실패
+                // 필요에 따라 처리
+            }
+        }
 
-        val linearLayoutTmap = findViewById<LinearLayout>(R.id.LinearLayout)
-        linearLayoutTmap.addView(tMapView)
-        //val button = findViewById<Button>(R.id.startButton)
+        // 음성 인식 버튼 클릭 시 처리
+        speakImage.setOnClickListener {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.RECORD_AUDIO), RECORD_AUDIO_PERMISSION_REQUEST)
+            } else {
+                //textToSpeech.speak("음성 인식을 시작하겠습니다.", TextToSpeech.QUEUE_FLUSH, null, null)
+                startListeningWithDelay()
+            }
+        }
 
+        // 정류소 검색 버튼 클릭 시 처리
+        button.setOnClickListener {
+            val inputText = editText.text.toString()
+            selectedBusNumber = inputText
+
+            requestLocationAndSendData()
+        }
+
+        // 위치 권한이 있는지 체크
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // 권한이 없다면 위치 접근 권한 요청
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), LOCATION_PERMISSION_REQUEST)
+        } else {
+            // 권한이 있다면 위치 업데이트 시작
+            startLocationUpdates()
+        }
+    }
+
+    // 음성 인식 시작 전 딜레이를 주는 메소드
+    private fun startListeningWithDelay() {
+        val handler = Handler(Looper.getMainLooper())
+
+        val initialDelay: Long = 500 // 0.5초
+        val secondDelay: Long = 2500 // 2.5초
+        val finalDelay: Long = 800 // 0.8초
+        // 처음 시작시 isFirstRun == true (위에 'private var isFirstRun = true' 이렇게 선언되어 있음)
+        if (isFirstRun) {
+            handler.postDelayed({
+                textToSpeech.speak("음성 인식을 시작하겠습니다.", TextToSpeech.QUEUE_FLUSH, null, null)
+            }, initialDelay) // 0.5초 후 실행
+            isFirstRun = false
+            handler.postDelayed({
+                textToSpeech.speak("시작", TextToSpeech.QUEUE_FLUSH, null, null)
+            }, initialDelay + secondDelay) // 3초 후 실행
+
+            handler.postDelayed({
+                startListening()
+            }, initialDelay + secondDelay + finalDelay) // 3.8초 후 실행
+        }
+        else{
+            handler.postDelayed({
+                textToSpeech.speak("시작", TextToSpeech.QUEUE_FLUSH, null, null)
+            }, initialDelay) // 0.5초 후 실행
+
+            handler.postDelayed({
+                startListening()
+            }, initialDelay + finalDelay) // 1.3초 후 실행
+        }
+    }
+
+    // 음성 인식 시작 메소드
+    private fun startListening() {
+        val intent: Intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+        intent.putExtra(
+            RecognizerIntent.EXTRA_LANGUAGE_MODEL,
+            RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
+        )
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.KOREAN)
+
+        if (intent.resolveActivity(packageManager) != null) {
+            activityResult.launch(intent)
+        } else {
+            Toast.makeText(this, "음성을 텍스트로 변환할 수 없습니다.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // 음성 인식 결과 처리를 위한 ActivityResultLauncher
+    private val activityResult: ActivityResultLauncher<Intent> = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        if (it.resultCode == RESULT_OK && it.data != null) {
+            val result: ArrayList<String> = it.data!!.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS) as ArrayList<String>
+            resultText.text = result[0]
+            speakText(result[0])
+        }
+    }
+
+    // TTS로 텍스트 읽어주는 메소드
+    private fun speakText(text: String) {
+        textToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+    }
+
+    // 위치 정보 요청 및 서버에 데이터 전송 메소드
+    private fun requestLocationAndSendData() {
         if (ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
+            ) == PackageManager.PERMISSION_GRANTED
         ) {
-            // 위치 권한 요청
+            // 위치 권한이 있는 경우
+            val locationListener = object : LocationListener {
+
+                override fun onLocationChanged(location: Location) {
+                    // 위치가 변경되면 서버에 데이터 전송
+                    val xCoordinate = location.latitude
+                    val yCoordinate = location.longitude
+                    sendDataToServer(xCoordinate, yCoordinate)
+                    locationManager.removeUpdates(this)
+                }
+
+                override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
+                override fun onProviderEnabled(provider: String) {}
+                override fun onProviderDisabled(provider: String) {}
+            }
+
+            // 위치 업데이트 요청
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0f, locationListener)
+        } else {
+            // 위치 권한이 없는 경우 권한 요청
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
                 LOCATION_PERMISSION_REQUEST
             )
-        }else{
-            // 임의로 설정(변경 필요)
-            val end_X = 127.080649
-            val end_Y = 37.799686
-            val end_Name_String = "도착지"
-            val end_Name = URLEncoder.encode(end_Name_String, "UTF-8")
-
-            // 현재 위치 받아오기
-            fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                if (location != null) {
-                    val start_X = 127.071336 //location.latitude
-                    val start_Y = 37.810042 //location.longitude
-
-                    Log.e("start_X", "${start_X}")
-                    Log.e("start_Y", "${start_Y}")
-
-                    val start_Name_String = "출발지"
-                    val start_Name = URLEncoder.encode(start_Name_String, "UTF-8")
-
-                    if(tMapView != null){
-                        tMapView.setCenterPoint(start_X, start_Y)
-                    }
-                    updateRoute(start_X, start_Y, end_X, end_Y, start_Name, end_Name) //Tmap 대중교통 API를 호출하는 함수
-                }
-            }
         }
     }
-    // 대중교통 경로를 업데이트하는 함수
-    private fun updateRoute(
-        start_X: Double, start_Y: Double,
-        end_X: Double, end_Y: Double,
-        start_Name: String, end_Name: String
-    ) {
-        // CoroutineScope 생성
-        val scope = CoroutineScope(Dispatchers.Main)
-        val startPoint = TMapPoint(start_Y, start_X)
-        val endPoint = TMapPoint(end_Y, end_X)
 
-        scope.launch {
-            val response = withContext(Dispatchers.IO) {
-                // api 호출에 필요한 데이터 설정
-                val requestData = RequestData(
-                    startX = start_X.toString(),
-                    startY = start_Y.toString(),
-                    endX = end_X.toString(),
-                    endY = end_Y.toString(),
-                    startName = start_Name,
-                    endName = end_Name
-                )
-                val json = Gson().toJson(requestData)
+    // 서버에 위치 데이터 전송 메소드
+    private fun sendDataToServer(xCoordinate: Double, yCoordinate: Double) {
+        val client = OkHttpClient()
+        var serverUrl = "http://3.37.242.54:3000/getAPI"
+        serverUrl += "?busNumber=$selectedBusNumber&xCoordinate=$yCoordinate&yCoordinate=$xCoordinate" //좌표 설정 잘못됨 그냥 x좌표랑 y좌표 바꿈
 
-                // api 호출을 위한 요청을 설정
-                val mediaType = "application/json".toMediaTypeOrNull()
-                val body = RequestBody.create(mediaType, json)
-                val request = Request.Builder()
-                    .url("https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1&callback=function")
-                    .post(body)
-                    .addHeader("accept", "application/json")
-                    .addHeader("content-type", "application/json")
-                    .addHeader("appKey", "UR12n8NxMX11hi3IhN9gR9vC4paPTvsn1NvuHL6M")
-                    .build()
+        val request = Request.Builder()
+            .url(serverUrl)
+            .get()
+            .build()
 
-                // api 호출 결과를 처리
-                client.newCall(request).execute()
-            }
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                // 네트워크 오류 처리
+                val errorMessage = e.message
 
-            if (response.isSuccessful) {
-                val responseBody = response.body
-                if (responseBody != null) {
-                    val responseString = responseBody.string()
-                    val jsonData = JSONObject(responseString)
-                    val features = jsonData.getJSONArray("features")
-
-                    val tMapPolyLine = TMapPolyLine()
-
-                    for (i in 0 until features.length()) {
-                        val feature = features.getJSONObject(i)
-                        val geometry = feature.getJSONObject("geometry")
-                        val coordinates = geometry.getJSONArray("coordinates")
-
-                        // LineString 타입인 경우에만 좌표를 추출
-                        if (geometry.getString("type") == "LineString") {
-                            for (j in 0 until coordinates.length()) {
-                                val coordinate = coordinates.getJSONArray(j)
-                                val tMapPoint = TMapPoint(coordinate.getDouble(1), coordinate.getDouble(0))
-                                tMapPolyLine.addLinePoint(tMapPoint)
-                            }
-                        }
+                if (errorMessage != null) {
+                    if (errorMessage.contains("Timeout", ignoreCase = true)) {
+                        Log.e("SubActivity", "네트워크 타임아웃 오류")
+                    } else if (errorMessage.contains("Connection refused", ignoreCase = true)) {
+                        Log.e("SubActivity", "서버 연결 거부 오류")
+                    } else {
+                        Log.e("SubActivity", "알 수 없는 네트워크 오류: $errorMessage")
                     }
-                    // Tmap에 경로를 그림
-                    tMapView.addTMapPolyLine("tMapPolyLine", tMapPolyLine)
-
-                    // 출발지와 도착지를 지도 화면에 꽉 차게 보여주도록 지도의 축척을 설정
-                    tMapView.zoomToSpan(Math.abs(start_Y - end_Y)*1.5, Math.abs(start_X - end_X))
-
-                    // 출발지와 도착지의 중간 지점을 계산
-                    val middlePointX = (start_X + end_X) / 2
-                    val middlePointY = (start_Y + end_Y) / 2
-
-                    // 지도의 중심점을 출발지와 도착지의 중간 지점으로 설정
-                    tMapView.setCenterPoint(middlePointX, middlePointY)
-
-                    val startMarker = TMapMarkerItem().apply {
-                        tMapPoint = startPoint
-                        icon = (resources.getDrawable(R.drawable.poi_star, null) as BitmapDrawable).bitmap
-                        setPosition(0.5f, 1.0f)
-                        // 마커의 라벨 설정
-                        calloutTitle = "출발지"
-                        // 말풍선(Callout Bubble) 활성화 및 자동 표시 설정
-                        canShowCallout = true
-                        autoCalloutVisible = true
-                    }
-                    tMapView.addMarkerItem("startMarker", startMarker)
-
-                    val endMarker = TMapMarkerItem().apply {
-                        tMapPoint = endPoint
-                        icon = (resources.getDrawable(R.drawable.end, null) as BitmapDrawable).bitmap
-                        setPosition(0.5f, 1.0f)
-                        // 마커의 라벨 설정
-                        calloutTitle = "목적지"
-                        // 말풍선(Callout Bubble) 활성화 및 자동 표시 설정
-                        canShowCallout = true
-                        autoCalloutVisible = true
-                    }
-                    tMapView.addMarkerItem("endMarker", endMarker)
-
-                    val startNavigationButton = findViewById<Button>(R.id.startButton)
-                    startNavigationButton.setOnClickListener {
-                        val intent = Intent(this@SubActivity, SubActivity2::class.java)
-                        // JSONArray를 ArrayList<String>으로 변환
-                        val list = ArrayList<String>()
-                        for (i in 0 until features.length()) {
-                            list.add(features.getString(i))
-                        }
-                        intent.putStringArrayListExtra("features", list)
-                        startActivity(intent)
-                    }
-
                 } else {
-                    Log.e("실패", "${response.code}")
+                    Log.e("SubActivity", "알 수 없는 네트워크 오류 발생")
                 }
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                if (response.isSuccessful) {
+                    // 서버 응답이 성공인 경우
+                    val responseData = response.body?.string()
+                    Log.d("responseData", "$responseData")
+
+                    // JSON 응답 처리
+                    processJsonResponse(responseData)
+                    // SubActivity2로 이동
+                    val intent = Intent(this@SubActivity, SubActivity2::class.java)
+                    intent.putExtra("responseData", responseData)
+                    intent.putExtra("busNumber", selectedBusNumber)
+                    intent.putExtra("currentLocation", currentLocation)
+                    startActivity(intent)
+                } else {
+                    // 서버 응답이 실패인 경우
+                    Log.e("SubActivity", "실패")
+                }
+            }
+        })
+    }
+
+    // JSON 응답 처리 메소드
+    private fun processJsonResponse(responseData: String?) {
+        val stationArray = parseJson(responseData)
+
+        for (i in 0 until stationArray.length()) {
+            val station = stationArray.getJSONObject(i)
+            val stationId = station.getString("stationId")
+            val stationName = station.getString("stationName")
+            val distance = station.getString("distance")
+            val x = station.getString("x")
+            val y = station.getString("y")
+
+            Log.d("Station", "정류소 ID: $stationId")
+            Log.d("Station", "정류소 이름: $stationName")
+            Log.d("Station", "거리: $distance")
+            Log.d("Station", "X 좌표: $x")
+            Log.d("Station", "Y 좌표: $y")
+        }
+    }
+
+    // JSON 파싱 메소드
+    private fun parseJson(jsonString: String?): JSONArray {
+        try {
+            return JSONArray(jsonString)
+        } catch (e: JSONException) {
+            e.printStackTrace()
+        }
+        return JSONArray()
+    }
+
+    // 위치 권한 요청 결과 처리 메소드
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if (requestCode == LOCATION_PERMISSION_REQUEST) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // 권한이 허용된 경우 위치 업데이트 시작
+                startLocationUpdates()
+            } else {
+                // 권한이 거부된 경우
+                Log.e("Permission", "Denied")
             }
         }
     }
-    data class RequestData(
-        val startX: String,
-        val startY: String,
-        val endX: String,
-        val endY: String,
-        val startName: String,
-        val endName: String
-    )
+
+    // 위치 업데이트 시작 메소드
+    private fun startLocationUpdates() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // 위치 권한이 없다면 권한 요청
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), LOCATION_PERMISSION_REQUEST)
+            return
+        }
+        // 위치 업데이트 요청
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000L, 10f, locationListener)
+    }
 }

@@ -32,7 +32,7 @@ class MainActivity : ComponentActivity() {
 //        val button3 = findViewById<Button>(R.id.button3)
 //
 //        button3.setOnClickListener {
-//            val intent = Intent(this, LED::class.java)
+//            val intent = Intent(this, Bus_search_voice::class.java)
 //            startActivity(intent)
 //        }
     }
